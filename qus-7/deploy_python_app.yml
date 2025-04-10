@@ -1,0 +1,10 @@
+---
+- name: Deploy Python App Role
+  hosts: localhost
+  become: true
+  vars:
+    app_name: "TestApp"
+    environment: "dev"
+
+  roles:
+    - python_app_deploy

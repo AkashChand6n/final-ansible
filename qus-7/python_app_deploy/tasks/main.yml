@@ -1,0 +1,24 @@
+---
+- name: Ensure Python3 is installed
+  apt:
+    name: python3
+    state: present
+  become: true
+
+- name: Ensure /etc/python_app directory exists
+  file:
+    path: /etc/python_app
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  become: true
+
+- name: Deploy application configuration
+  template:
+    src: config.yml.j2
+    dest: /etc/python_app/config.yml
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
