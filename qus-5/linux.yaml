@@ -1,0 +1,73 @@
+---
+- name: Setup Web Server Based on Linux Distribution
+  hosts: all
+  become: yes
+  tasks:
+
+    - name: Install Apache on Debian/Ubuntu
+      apt:
+        name: apache2
+        state: present
+        update_cache: yes
+      when: ansible_facts['os_family'] == "Debian"
+
+    - name: Install HTTPD on RedHat/CentOS
+      yum:
+        name: httpd
+        state: present
+      when: ansible_facts['os_family'] == "RedHat"
+
+    - name: Validate Apache version (Debian)
+      command: apache2 -v
+      register: apache2_version
+      when: ansible_facts['os_family'] == "Debian"
+
+    - name: Validate HTTPD version (RedHat)
+      command: httpd -v
+      register: httpd_version
+      when: ansible_facts['os_family'] == "RedHat"
+
+    - name: Show Apache version on Debian
+      debug:
+        var: apache2_version.stdout
+      when: apache2_version is defined
+
+    - name: Show HTTPD version on RedHat
+      debug:
+        var: httpd_version.stdout
+      when: httpd_version is defined
+
+    - name: Ensure destination web directory exists
+      file:
+        path: /var/www/html
+        state: directory
+        mode: '0755'
+
+    - name: Copy website content to remote host
+      copy:
+        src: ./website/
+        dest: /var/www/html/
+        owner: root
+        group: root
+        mode: '0644'
+      notify: Restart Apache
+
+    - name: Start and enable Apache service on Ubuntu
+      service:
+        name: apache2
+        state: started
+        enabled: yes
+      when: ansible_facts['os_family'] == "Debian"
+
+    - name: Start and enable HTTPD service on RedHat
+      service:
+        name: httpd
+        state: started
+        enabled: yes
+      when: ansible_facts['os_family'] == "RedHat"
+
+  handlers:
+    - name: Restart Apache
+      service:
+        name: "{{ ansible_facts['os_family'] == 'Debian' | ternary('apache2', 'httpd') }}"
+        state: restarted
