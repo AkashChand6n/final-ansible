@@ -1,0 +1,23 @@
+---
+- name: Create a superuser with home directory
+  hosts: all
+  become: yes
+  vars:
+    username: test
+    user_shell: /bin/bash
+    superuser_group: "{{ 'sudo' if ansible_os_family == 'Debian' else 'wheel' }}"
+
+  tasks:
+    - name: Ensure the user exists with home directory and shell
+      user:
+        name: "{{ username }}"
+        shell: "{{ user_shell }}"
+        home: "/home/{{ username }}"
+        state: present
+        create_home: yes
+
+    - name: Add the user to the superuser group
+      user:
+        name: "{{ username }}"
+        groups: "{{ superuser_group }}"
+        append: yes
